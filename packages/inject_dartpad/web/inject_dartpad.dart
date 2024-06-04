@@ -2,6 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
@@ -11,11 +12,6 @@ import 'package:web/web.dart' as web;
 const String _iframePrefix = 'https://dartpad.dev/';
 
 void main() {
-  // Select all `code` elements with the `dartpad` attribute that are
-  // the only child of a `pre` element.
-  final codeElements =
-      web.document.querySelectorAll('pre > code[data-dartpad]:only-child');
-
   final embeds = <String, String>{};
   web.window.addEventListener(
     'message',
@@ -35,13 +31,18 @@ void main() {
     }.toJS,
   );
 
-  for (var index = 0; index < codeElements.length; index += 1) {
-    final codeElement = codeElements.item(index) as web.HTMLElement;
-    if (_injectEmbed(codeElement) case final injectedEmbed?) {
-      final (:id, :code) = injectedEmbed;
-      embeds[id] = code;
+  Timer.periodic(Duration(milliseconds: 200), (_) {
+    // Select all `code` elements with the `dartpad` attribute that are
+    // the only child of a `pre` element.
+    final codeElements = web.document.querySelectorAll('pre > code[data-dartpad]:only-child');
+    for (var index = 0; index < codeElements.length; index += 1) {
+      final codeElement = codeElements.item(index) as web.HTMLElement;
+      if (_injectEmbed(codeElement) case final injectedEmbed?) {
+        final (:id, :code) = injectedEmbed;
+        embeds[id] = code;
+      }
     }
-  }
+  });
 }
 
 final _htmlUnescape = HtmlUnescape();
